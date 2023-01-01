@@ -28,10 +28,13 @@ import com.arangodb.springframework.core.util.AqlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
+import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * The implementation of all CRUD, paging and sorting functionality in
@@ -327,6 +330,63 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	@Override
 	public <S extends T> boolean exists(final Example<S> example) {
 		return count(example) > 0;
+	}
+
+	@Override
+	public <S extends T, R> R findBy(final Example<S> example, Function<FluentQuery.FetchableFluentQuery<S>, R> queryFunction) {
+		final Iterable<S> cursor = findAll(example);
+		FluentQuery.FetchableFluentQuery<S> fluentQuery = new FluentQuery.FetchableFluentQuery<S>() {
+			@Override
+			public FetchableFluentQuery<S> sortBy(Sort sort) {
+				return null;
+			}
+
+			@Override
+			public <R> FetchableFluentQuery<R> as(Class<R> resultType) {
+				return null;
+			}
+
+			@Override
+			public FetchableFluentQuery<S> project(Collection<String> properties) {
+				return null;
+			}
+
+			@Override
+			public S oneValue() {
+				return null;
+			}
+
+			@Override
+			public S firstValue() {
+				return null;
+			}
+
+			@Override
+			public List<S> all() {
+				return null;
+			}
+
+			@Override
+			public Page<S> page(Pageable pageable) {
+				return null;
+			}
+
+			@Override
+			public Stream<S> stream() {
+				return null;
+			}
+
+			@Override
+			public long count() {
+				return 0;
+			}
+
+			@Override
+			public boolean exists() {
+				return false;
+			}
+		};
+		return queryFunction.apply(fluentQuery);
 	}
 
 	private <S extends T> ArangoCursor<T> findAllInternal(final Sort sort, @Nullable final Example<S> example,
